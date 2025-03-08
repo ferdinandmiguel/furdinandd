@@ -1,7 +1,7 @@
+// filepath: c:\Users\Miguel Perico\websys_project\backend\routes\auth.js
 const express = require('express');
 const router = express.Router();
-const Cat = require('../models/cat');
-const Dog = require('../models/dog');
+const db = require('../server');
 
 // Mock user data
 const users = [
@@ -33,111 +33,151 @@ router.post('/register', (req, res) => {
 });
 
 // Create a new cat
-router.post('/cats', async (req, res) => {
-  try {
-    const cat = new Cat(req.body);
-    await cat.save();
-    res.status(201).json(cat);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
+router.post('/cats', (req, res) => {
+  const { name, gender, description, rescue_date, health_status, adopted, image } = req.body;
+  const query = 'INSERT INTO cats (name, gender, description, rescue_date, health_status, adopted, image) VALUES (?, ?, ?, ?, ?, ?, ?)';
+  db.query(query, [name, gender, description, rescue_date, health_status, adopted, image], (err, result) => {
+    if (err) {
+      res.status(400).json({ message: err.message });
+      return;
+    }
+    res.status(201).json({ id: result.insertId, ...req.body });
+  });
 });
 
 // Get all cats
-router.get('/cats', async (req, res) => {
-  try {
-    const cats = await Cat.find();
-    res.json(cats);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+router.get('/cats', (req, res) => {
+  const query = 'SELECT * FROM cats';
+  db.query(query, (err, results) => {
+    if (err) {
+      res.status(500).json({ message: err.message });
+      return;
+    }
+    res.json(results);
+  });
 });
 
 // Get a single cat by ID
-router.get('/cats/:id', async (req, res) => {
-  try {
-    const cat = await Cat.findById(req.params.id);
-    if (!cat) return res.status(404).json({ message: 'Cat not found' });
-    res.json(cat);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+router.get('/cats/:id', (req, res) => {
+  const query = 'SELECT * FROM cats WHERE id = ?';
+  db.query(query, [req.params.id], (err, results) => {
+    if (err) {
+      res.status(500).json({ message: err.message });
+      return;
+    }
+    if (results.length === 0) {
+      res.status(404).json({ message: 'Cat not found' });
+      return;
+    }
+    res.json(results[0]);
+  });
 });
 
 // Update a cat by ID
-router.put('/cats/:id', async (req, res) => {
-  try {
-    const cat = await Cat.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!cat) return res.status(404).json({ message: 'Cat not found' });
-    res.json(cat);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
+router.put('/cats/:id', (req, res) => {
+  const { name, gender, description, rescue_date, health_status, adopted, image } = req.body;
+  const query = 'UPDATE cats SET name = ?, gender = ?, description = ?, rescue_date = ?, health_status = ?, adopted = ?, image = ? WHERE id = ?';
+  db.query(query, [name, gender, description, rescue_date, health_status, adopted, image, req.params.id], (err, result) => {
+    if (err) {
+      res.status(400).json({ message: err.message });
+      return;
+    }
+    if (result.affectedRows === 0) {
+      res.status(404).json({ message: 'Cat not found' });
+      return;
+    }
+    res.json({ id: req.params.id, ...req.body });
+  });
 });
 
 // Delete a cat by ID
-router.delete('/cats/:id', async (req, res) => {
-  try {
-    const cat = await Cat.findByIdAndDelete(req.params.id);
-    if (!cat) return res.status(404).json({ message: 'Cat not found' });
+router.delete('/cats/:id', (req, res) => {
+  const query = 'DELETE FROM cats WHERE id = ?';
+  db.query(query, [req.params.id], (err, result) => {
+    if (err) {
+      res.status(500).json({ message: err.message });
+      return;
+    }
+    if (result.affectedRows === 0) {
+      res.status(404).json({ message: 'Cat not found' });
+      return;
+    }
     res.json({ message: 'Cat deleted' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  });
 });
 
 // Create a new dog
-router.post('/dogs', async (req, res) => {
-  try {
-    const dog = new Dog(req.body);
-    await dog.save();
-    res.status(201).json(dog);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
+router.post('/dogs', (req, res) => {
+  const { name, gender, description, rescue_date, health_status, adopted, image } = req.body;
+  const query = 'INSERT INTO dogs (name, gender, description, rescue_date, health_status, adopted, image) VALUES (?, ?, ?, ?, ?, ?, ?)';
+  db.query(query, [name, gender, description, rescue_date, health_status, adopted, image], (err, result) => {
+    if (err) {
+      res.status(400).json({ message: err.message });
+      return;
+    }
+    res.status(201).json({ id: result.insertId, ...req.body });
+  });
 });
 
 // Get all dogs
-router.get('/dogs', async (req, res) => {
-  try {
-    const dogs = await Dog.find();
-    res.json(dogs);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+router.get('/dogs', (req, res) => {
+  const query = 'SELECT * FROM dogs';
+  db.query(query, (err, results) => {
+    if (err) {
+      res.status(500).json({ message: err.message });
+      return;
+    }
+    res.json(results);
+  });
 });
 
 // Get a single dog by ID
-router.get('/dogs/:id', async (req, res) => {
-  try {
-    const dog = await Dog.findById(req.params.id);
-    if (!dog) return res.status(404).json({ message: 'Dog not found' });
-    res.json(dog);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+router.get('/dogs/:id', (req, res) => {
+  const query = 'SELECT * FROM dogs WHERE id = ?';
+  db.query(query, [req.params.id], (err, results) => {
+    if (err) {
+      res.status(500).json({ message: err.message });
+      return;
+    }
+    if (results.length === 0) {
+      res.status(404).json({ message: 'Dog not found' });
+      return;
+    }
+    res.json(results[0]);
+  });
 });
 
 // Update a dog by ID
-router.put('/dogs/:id', async (req, res) => {
-  try {
-    const dog = await Dog.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!dog) return res.status(404).json({ message: 'Dog not found' });
-    res.json(dog);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
+router.put('/dogs/:id', (req, res) => {
+  const { name, gender, description, rescue_date, health_status, adopted, image } = req.body;
+  const query = 'UPDATE dogs SET name = ?, gender = ?, description = ?, rescue_date = ?, health_status = ?, adopted = ?, image = ? WHERE id = ?';
+  db.query(query, [name, gender, description, rescue_date, health_status, adopted, image, req.params.id], (err, result) => {
+    if (err) {
+      res.status(400).json({ message: err.message });
+      return;
+    }
+    if (result.affectedRows === 0) {
+      res.status(404).json({ message: 'Dog not found' });
+      return;
+    }
+    res.json({ id: req.params.id, ...req.body });
+  });
 });
 
 // Delete a dog by ID
-router.delete('/dogs/:id', async (req, res) => {
-  try {
-    const dog = await Dog.findByIdAndDelete(req.params.id);
-    if (!dog) return res.status(404).json({ message: 'Dog not found' });
+router.delete('/dogs/:id', (req, res) => {
+  const query = 'DELETE FROM dogs WHERE id = ?';
+  db.query(query, [req.params.id], (err, result) => {
+    if (err) {
+      res.status(500).json({ message: err.message });
+      return;
+    }
+    if (result.affectedRows === 0) {
+      res.status(404).json({ message: 'Dog not found' });
+      return;
+    }
     res.json({ message: 'Dog deleted' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  });
 });
 
 module.exports = router;

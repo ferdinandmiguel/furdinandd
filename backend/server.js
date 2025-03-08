@@ -2,15 +2,27 @@
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
+const mysql = require('mysql2');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 const authRoutes = require('./routes/auth');
 
-mongoose.connect('mongodb://localhost:27017/websys_project', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
+// Create a connection to the MySQL database
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root', // Replace with your MySQL username
+  password: '', // Replace with your MySQL password
+  database: 'furdinand' 
+});
+
+// Connect to the database
+db.connect((err) => {
+  if (err) {
+    console.error('Error connecting to MySQL:', err.message);
+    return;
+  }
+  console.log('Connected to MySQL');
 });
 
 app.use(bodyParser.json());
@@ -34,3 +46,5 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+module.exports = db;
